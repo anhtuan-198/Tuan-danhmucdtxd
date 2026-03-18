@@ -251,20 +251,23 @@ export default function App() {
   const fetchProjects = async (currentProjectInfo: Record<string, string>) => {
     try {
       let response;
+      const timestamp = new Date().getTime();
+      const urlWithCacheBuster = `${PROJECTS_GVIZ_URL}&t=${timestamp}`;
+      
       try {
-        response = await fetch(PROJECTS_GVIZ_URL);
+        response = await fetch(urlWithCacheBuster);
         if (!response.ok) throw new Error('Direct fetch failed');
       } catch (e) {
         try {
-          response = await fetch(PROJECTS_PROXY_URL);
+          response = await fetch(`${PROJECTS_PROXY_URL}&t=${timestamp}`);
           if (!response.ok) throw new Error('Proxy fetch failed');
         } catch (e2) {
           try {
-            response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(PROJECTS_GVIZ_URL)}`);
+            response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(urlWithCacheBuster)}`);
             if (!response.ok) throw new Error('AllOrigins fetch failed');
           } catch (e3) {
             // One last try
-            response = await fetch(`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(PROJECTS_GVIZ_URL)}`);
+            response = await fetch(`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(urlWithCacheBuster)}`);
             if (!response.ok) throw new Error('ThingProxy fetch failed');
           }
         }
@@ -272,33 +275,50 @@ export default function App() {
       
       const csvText = await response.text();
       Papa.parse(csvText, {
+        header: false,
+        skipEmptyLines: true,
         complete: (results) => {
           const rows = results.data as string[][];
           const projects: Record<string, string>[] = [];
           
-          // Assuming row 0 is header: STT, MCT, Tên công trình, Địa điểm xây dựng, Chủ đầu tư, TVTK, TVGS, Nhà thầu thi công
-          // Start from row 1
+          // The sheet "Thông tin theo MCT" structure:
+          // Col 0: STT
+          // Col 1: Mã công trình
+          // Col 2: Tên công trình
+          // Col 3: Địa điểm xây dựng
+          // Col 4: Chủ đầu tư
+          // Col 5: Đơn vị TV Thiết Kế
+          // Col 6: Đơn vị TV Giám sát
+          // Col 7: Đơn vị thi công
+          
+          // Start from row 1 (skipping header)
           for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (row && row[2]) { // Tên công trình is at index 2
+            if (row && row.length >= 3 && row[2] && row[2].trim() !== "" && row[2] !== "Tên công trình") {
               projects.push({
-                "Tên dự án/công trình": row[2] || "",
-                "Mã công trình": row[1] || "",
-                "Chủ Đầu Tư": row[4] || "",
-                "Địa điểm xây dựng": row[3] || "",
-                "Đơn vị TV Thiết Kế": row[5] || "",
-                "Đơn vị TV Giám sát": row[6] || "",
-                "Đơn vị thi công": row[7] || ""
+                "Tên dự án/công trình": row[2].trim(),
+                "Mã công trình": row[1]?.trim() || "",
+                "Chủ Đầu Tư": row[4]?.trim() || "",
+                "Địa điểm xây dựng": row[3]?.trim() || "",
+                "Đơn vị TV Thiết Kế": row[5]?.trim() || "",
+                "Đơn vị TV Giám sát": row[6]?.trim() || "",
+                "Đơn vị thi công": row[7]?.trim() || ""
               });
             }
           }
           
           // Ensure current project is in the list if not already
-          if (!projects.some(p => p["Tên dự án/công trình"] === currentProjectInfo["Tên dự án/công trình"])) {
+          const currentName = currentProjectInfo["Tên dự án/công trình"];
+          if (currentName && !projects.some(p => p["Tên dự án/công trình"] === currentName)) {
             projects.unshift(currentProjectInfo);
           }
           
-          setAvailableProjects(projects);
+          // Remove duplicates by name
+          const uniqueProjects = projects.filter((v, i, a) => 
+            a.findIndex(t => t["Tên dự án/công trình"] === v["Tên dự án/công trình"]) === i
+          );
+          
+          setAvailableProjects(uniqueProjects);
         }
       });
     } catch (err) {
@@ -552,7 +572,7 @@ export default function App() {
                   return (
                     <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                       <span className="text-slate-500 font-medium min-w-[160px]">{key}:</span>
-                      <div className="relative flex-1 max-w-2xl">
+                      <div className="relative flex-1 max-w-4xl">
                         <input 
                           type="text" 
                           list="project-list"
@@ -578,9 +598,19 @@ export default function App() {
                               setProjectInfo(prev => ({...prev, "Tên dự án/công trình": selectedName}));
                             }
                           }}
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-slate-800 font-semibold"
+                          className="w-full pl-3 pr-10 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-slate-800 font-semibold"
                           placeholder="Nhập từ khoá để tìm kiếm..."
+                          onFocus={(e) => e.target.select()}
                         />
+                        {value && (
+                          <button 
+                            onClick={() => setProjectInfo(prev => ({...prev, "Tên dự án/công trình": ""}))}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+                            title="Xoá"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                         <datalist id="project-list">
                           {availableProjects.map((p, i) => (
                             <option key={i} value={p["Tên dự án/công trình"]} />
