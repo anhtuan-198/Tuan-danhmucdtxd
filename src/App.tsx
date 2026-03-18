@@ -56,17 +56,37 @@ export default function App() {
       
       // 1. Fetch CSV data first
       let response;
+      let fetchError = null;
+      
       try {
         response = await fetch(urlWithCacheBuster);
-        if (!response.ok) throw new Error('Direct fetch failed');
+        if (!response.ok) throw new Error(`Direct fetch failed: ${response.status}`);
       } catch (e) {
+        fetchError = e;
         try {
           response = await fetch(`${PROXY_URL}&t=${timestamp}`);
-          if (!response.ok) throw new Error('Proxy fetch failed');
+          if (!response.ok) throw new Error(`Proxy fetch failed: ${response.status}`);
         } catch (e2) {
-          response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(urlWithCacheBuster)}`);
-          if (!response.ok) throw new Error('AllOrigins fetch failed');
+          fetchError = e2;
+          try {
+            response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(urlWithCacheBuster)}`);
+            if (!response.ok) throw new Error(`AllOrigins fetch failed: ${response.status}`);
+          } catch (e3) {
+            fetchError = e3;
+            // One last try with another proxy
+            try {
+              response = await fetch(`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(urlWithCacheBuster)}`);
+              if (!response.ok) throw new Error(`ThingProxy fetch failed: ${response.status}`);
+            } catch (e4) {
+              fetchError = e4;
+              throw new Error('Không thể kết nối với dữ liệu Google Sheet. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.');
+            }
+          }
         }
+      }
+      
+      if (!response || !response.ok) {
+        throw new Error('Không thể tải dữ liệu từ Google Sheet.');
       }
       
       const csvText = await response.text();
@@ -239,8 +259,14 @@ export default function App() {
           response = await fetch(PROJECTS_PROXY_URL);
           if (!response.ok) throw new Error('Proxy fetch failed');
         } catch (e2) {
-          response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(PROJECTS_GVIZ_URL)}`);
-          if (!response.ok) throw new Error('AllOrigins fetch failed');
+          try {
+            response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(PROJECTS_GVIZ_URL)}`);
+            if (!response.ok) throw new Error('AllOrigins fetch failed');
+          } catch (e3) {
+            // One last try
+            response = await fetch(`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(PROJECTS_GVIZ_URL)}`);
+            if (!response.ok) throw new Error('ThingProxy fetch failed');
+          }
         }
       }
       
@@ -467,23 +493,45 @@ export default function App() {
                 const url = "https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/export?format=xlsx&gid=0";
                 
                 try {
-                  // Use a proxy to avoid CORS issues when fetching the blob
-                  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                  const response = await fetch(proxyUrl);
-                  const blob = await response.blob();
-                  const blobUrl = window.URL.createObjectURL(blob);
+                  // Try multiple proxies for download
+                  const proxies = [
+                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                    `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`
+                  ];
                   
-                  const link = document.createElement('a');
-                  link.href = blobUrl;
-                  link.download = filename;
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                  window.URL.revokeObjectURL(blobUrl);
+                  let blob = null;
+                  for (const proxy of proxies) {
+                    try {
+                      const response = await fetch(proxy);
+                      if (response.ok) {
+                        blob = await response.blob();
+                        break;
+                      }
+                    } catch (e) {
+                      console.warn(`Proxy ${proxy} failed`, e);
+                    }
+                  }
+                  
+                  if (blob) {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(blobUrl);
+                  } else {
+                    throw new Error('All proxies failed');
+                  }
                 } catch (error) {
                   console.error('Download failed', error);
-                  // Fallback to direct link if proxy fails
-                  window.open(url, '_blank');
+                  // Fallback to direct link if all proxies fail
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.target = '_blank';
+                  link.click();
                 }
               }}
               className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-emerald-700 border-2 border-emerald-600 rounded-lg hover:bg-emerald-50 font-semibold shadow-sm hover:shadow-md transition-all duration-200 w-full sm:w-auto"
