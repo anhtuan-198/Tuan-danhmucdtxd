@@ -1,0 +1,5 @@
+{
+  "name": "Quản lý Danh mục ĐTXD",
+  "description": "Ứng dụng hiển thị danh mục hồ sơ từ Google Sheets và tích hợp các chức năng Tạo danh mục, Nhập dữ liệu, Export.",
+  "requestFramePermissions": []
+}
