@@ -3,14 +3,14 @@ import Papa from 'papaparse';
 import { Settings, RefreshCw, FilePlus, Database, Download, ExternalLink, AlertCircle, X } from 'lucide-react';
 import { EVN_HCMC_LOGO } from "./assets/logo";
 
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/export?format=csv&gid=0';
-const PROJECTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/export?format=csv&gid=1152018861'; // Using gid for 'Thông tin theo MCT' if known, or gviz. Let's use gviz to be safe.
-const PROJECTS_GVIZ_URL = 'https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent('Thông tin theo MCT');
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=csv&gid=0';
+const PROJECTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=csv&gid=1152018861'; // Using gid for 'Thông tin theo MCT' if known, or gviz. Let's use gviz to be safe.
+const PROJECTS_GVIZ_URL = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent('Thông tin theo MCT');
 
 const PROXY_URL = `https://corsproxy.io/?${encodeURIComponent(SHEET_CSV_URL)}`;
 const PROJECTS_PROXY_URL = `https://corsproxy.io/?${encodeURIComponent(PROJECTS_GVIZ_URL)}`;
 
-const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzM2LkJuvFJJDK6br3ZWlPELN1ZhXaglrnts173Zp_Oqxg5kHsLLuBoVtBGoujHoZhmig/exec';
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwneLdbK4axFnelPpWLGeCclV9_GLwrCIm2SglXlDh_Cmq16U3b-t7_ryfpo14mLU2Z/exec';
 
 export default function App() {
   const [data, setData] = useState<string[][]>([]);
