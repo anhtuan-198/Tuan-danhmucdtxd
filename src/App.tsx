@@ -24,6 +24,9 @@ export default function App() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const clickCountRef = useRef(0);
   const lastClickTimeRef = useRef(0);
 
@@ -44,6 +47,15 @@ export default function App() {
 
   useEffect(() => {
     fetchData();
+    
+    // Handle click outside for custom dropdown
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const fetchData = async (expectedProjectCode?: string, retries = 0) => {
@@ -572,50 +584,75 @@ export default function App() {
                   return (
                     <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                       <span className="text-slate-500 font-medium min-w-[160px]">{key}:</span>
-                      <div className="relative flex-1 max-w-4xl">
+                      <div className="relative flex-1 max-w-4xl" ref={dropdownRef}>
                         <input 
                           type="text" 
-                          list="project-list"
                           value={value}
+                          onFocus={() => setShowDropdown(true)}
                           onChange={(e) => {
                             const selectedName = e.target.value;
+                            setProjectInfo(prev => ({...prev, "Tên dự án/công trình": selectedName}));
+                            setShowDropdown(true);
+                            
                             const foundProject = availableProjects.find(p => p["Tên dự án/công trình"] === selectedName);
                             if (foundProject) {
                               setProjectInfo(foundProject);
-                              
-                              // Clear data immediately to avoid showing stale data
                               setData([]);
                               setLoading(true);
-                              
-                              // Trigger update to Google Sheet via Apps Script
+                              setShowDropdown(false);
                               if (scriptUrl) {
                                 triggerAction('Cập nhật Thông tin dự án', 'updateProjectInfo', foundProject);
                               } else {
                                 alert('Vui lòng cài đặt Apps Script Web App URL (biểu tượng bánh răng góc trên bên phải) để có thể đồng bộ dữ liệu lên Google Sheet.');
                                 setLoading(false);
                               }
-                            } else {
-                              setProjectInfo(prev => ({...prev, "Tên dự án/công trình": selectedName}));
                             }
                           }}
                           className="w-full pl-3 pr-10 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-slate-800 font-semibold"
                           placeholder="Nhập từ khoá để tìm kiếm..."
-                          onFocus={(e) => e.target.select()}
                         />
                         {value && (
                           <button 
-                            onClick={() => setProjectInfo(prev => ({...prev, "Tên dự án/công trình": ""}))}
+                            onClick={() => {
+                              setProjectInfo(prev => ({...prev, "Tên dự án/công trình": ""}));
+                              setShowDropdown(true);
+                            }}
                             className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
                             title="Xoá"
                           >
                             <X className="w-4 h-4" />
                           </button>
                         )}
-                        <datalist id="project-list">
-                          {availableProjects.map((p, i) => (
-                            <option key={i} value={p["Tên dự án/công trình"]} />
-                          ))}
-                        </datalist>
+                        
+                        {showDropdown && (
+                          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-80 overflow-y-auto">
+                            {availableProjects
+                              .filter(p => !value || p["Tên dự án/công trình"].toLowerCase().includes(value.toLowerCase()))
+                              .map((p, i) => (
+                                <div 
+                                  key={i}
+                                  className="px-4 py-2 hover:bg-emerald-50 cursor-pointer text-sm text-slate-700 border-b border-slate-50 last:border-0 leading-relaxed"
+                                  onClick={() => {
+                                    setProjectInfo(p);
+                                    setData([]);
+                                    setLoading(true);
+                                    setShowDropdown(false);
+                                    if (scriptUrl) {
+                                      triggerAction('Cập nhật Thông tin dự án', 'updateProjectInfo', p);
+                                    } else {
+                                      alert('Vui lòng cài đặt Apps Script Web App URL (biểu tượng bánh răng góc trên bên phải) để có thể đồng bộ dữ liệu lên Google Sheet.');
+                                      setLoading(false);
+                                    }
+                                  }}
+                                >
+                                  {p["Tên dự án/công trình"]}
+                                </div>
+                              ))}
+                            {availableProjects.filter(p => !value || p["Tên dự án/công trình"].toLowerCase().includes(value.toLowerCase())).length === 0 && (
+                              <div className="px-4 py-3 text-sm text-slate-400 italic">Không tìm thấy dự án phù hợp</div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
