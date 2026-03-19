@@ -23,6 +23,7 @@ export default function App() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<string>('');
 
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -253,6 +254,7 @@ export default function App() {
       setData(tableData);
       
       setLoading(false);
+      setLastUpdated(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
 
     } catch (err: any) {
       setError(err.message);
@@ -408,13 +410,10 @@ export default function App() {
             <h1 className="text-xl sm:text-2xl font-bold text-blue-900 uppercase tracking-tight">QUẢN LÝ DANH MỤC ĐTXD</h1>
           </div>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={fetchData}
-              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
-              title="Làm mới dữ liệu"
-            >
-              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center gap-2 text-slate-400 text-xs font-medium bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+              <div className={`w-2 h-2 rounded-full ${loading ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`}></div>
+              <span>Cập nhật: {lastUpdated || '--:--'}</span>
+            </div>
           </div>
         </div>
       </header>
@@ -627,7 +626,7 @@ export default function App() {
                         {showDropdown && (
                           <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-80 overflow-y-auto">
                             {availableProjects
-                              .filter(p => !value || p["Tên dự án/công trình"].toLowerCase().includes(value.toLowerCase()))
+                              .filter(p => !value || String(p["Tên dự án/công trình"]).toLowerCase().includes(String(value).toLowerCase()))
                               .map((p, i) => (
                                 <div 
                                   key={i}
@@ -648,7 +647,7 @@ export default function App() {
                                   {p["Tên dự án/công trình"]}
                                 </div>
                               ))}
-                            {availableProjects.filter(p => !value || p["Tên dự án/công trình"].toLowerCase().includes(value.toLowerCase())).length === 0 && (
+                            {availableProjects.filter(p => !value || String(p["Tên dự án/công trình"]).toLowerCase().includes(String(value).toLowerCase())).length === 0 && (
                               <div className="px-4 py-3 text-sm text-slate-400 italic">Không tìm thấy dự án phù hợp</div>
                             )}
                           </div>
@@ -766,6 +765,11 @@ export default function App() {
           </div>
         </div>
       )}
+      <footer className="bg-blue-900 text-white/80 py-4 mt-12">
+        <div className="max-w-7xl mx-auto px-4 text-center text-xs font-medium tracking-wide">
+          <p>© 2026 Công ty Điện lực Vũng Tàu</p>
+        </div>
+      </footer>
     </div>
   );
 }
