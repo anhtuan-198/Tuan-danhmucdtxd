@@ -154,7 +154,7 @@ export default function App() {
       // 3. Match found! Now fetch HTML version to extract links
       let htmlText = '';
       try {
-        const htmlUrl = 'https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/htmlview/sheet?headers=true&gid=0';
+        const htmlUrl = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/htmlview/sheet?headers=true&gid=0';
         let htmlResponse;
         try {
           htmlResponse = await fetch(htmlUrl);
@@ -529,7 +529,7 @@ export default function App() {
             <button 
               onClick={async () => {
                 const filename = `Danh mục hồ sơ - ${projectInfo["Mã công trình"] || ""}.xlsx`;
-                const url = "https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/export?format=xlsx&gid=0";
+                const url = "https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=xlsx&gid=0";
                 
                 try {
                   // Try multiple proxies for download
