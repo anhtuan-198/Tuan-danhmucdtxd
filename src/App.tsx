@@ -795,6 +795,26 @@ export default function App() {
                     );
                   }
 
+                  const hasNoInfo = !row[3]?.trim() && !row[4]?.trim() && !(row[5] && (row[5].startsWith('http://') || row[5].startsWith('https://')));
+                  
+                  if (hasNoInfo) {
+                    return (
+                      <div key={rowIndex} className="p-4 bg-white">
+                        <div className="flex items-start gap-3">
+                          <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0 mt-0.5">
+                            {row[0]}
+                          </span>
+                          <div className="flex flex-col gap-1">
+                            <h3 className="text-sm font-medium text-slate-700 leading-snug">
+                              {row[1]}
+                            </h3>
+                            <span className="text-[11px] text-slate-400 italic">Chưa có văn bản</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
                     <div key={rowIndex} className="p-4 bg-white active:bg-slate-50 transition-colors">
                       <div className="flex items-start gap-3 mb-3">
