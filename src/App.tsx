@@ -4,7 +4,7 @@ import { Settings, RefreshCw, FilePlus, Database, Download, ExternalLink, AlertC
 import { EVN_HCMC_LOGO } from "./assets/logo";
 
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=csv&gid=0';
-const PROJECTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=csv&gid=1152018861'; // Using gid for 'Thông tin theo MCT' if known, or gviz. Let's use gviz to be safe.
+const PROJECTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=csv&gid=445176946'; // Using gid for 'Thông tin theo MCT' if known, or gviz. Let's use gviz to be safe.
 const PROJECTS_GVIZ_URL = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent('Thông tin theo MCT');
 
 const PROXY_URL = `https://corsproxy.io/?${encodeURIComponent(SHEET_CSV_URL)}`;
@@ -146,7 +146,7 @@ export default function App() {
       // 3. Match found! Now fetch HTML version to extract links
       let htmlText = '';
       try {
-        const htmlUrl = 'https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/htmlview/sheet?headers=true&gid=0';
+        const htmlUrl = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/htmlview/sheet?headers=true&gid=0';
         let htmlResponse;
         try {
           htmlResponse = await fetch(htmlUrl);
@@ -521,7 +521,7 @@ export default function App() {
             <button 
               onClick={async () => {
                 const filename = `Danh mục hồ sơ - ${projectInfo["Mã công trình"] || ""}.xlsx`;
-                const url = "https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/export?format=xlsx&gid=0";
+                const url = "https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=xlsx&gid=0";
                 
                 try {
                   // Try multiple proxies for download
