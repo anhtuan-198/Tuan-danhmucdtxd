@@ -727,58 +727,149 @@ export default function App() {
               <p className="text-sm mt-1">{error}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto max-h-[600px]">
-              <table className="w-full text-sm text-left whitespace-nowrap">
-                <thead className="text-xs text-slate-600 uppercase bg-white sticky top-0 z-10 shadow-sm text-center">
-                  <tr>
-                    {/* Custom headers based on the CSV structure we saw */}
-                    <th className="px-4 py-3 font-semibold border-b border-slate-200">STT</th>
-                    <th className="px-4 py-3 font-semibold border-b border-slate-200">TÊN VĂN BẢN</th>
-                    <th className="px-4 py-3 font-semibold border-b border-slate-200">SỐ VB</th>
-                    <th className="px-4 py-3 font-semibold border-b border-slate-200">NGÀY VB</th>
-                    <th className="px-4 py-3 font-semibold border-b border-slate-200">FILE VB</th>
-                    <th className="px-4 py-3 font-semibold border-b border-slate-200">CƠ QUAN BAN HÀNH</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {rows.map((row, rowIndex) => {
-                    // Skip empty rows or rows that are just section headers if they don't fit well
-                    // But we'll try to render them nicely
-                    const isSectionHeader = row[1] && !row[3] && !row[4] && !row[5] && !row[6];
-                    
+            <>
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto max-h-[600px]">
+                <table className="w-full text-sm text-left whitespace-nowrap">
+                  <thead className="text-xs text-slate-600 uppercase bg-white sticky top-0 z-10 shadow-sm text-center">
+                    <tr>
+                      {/* Custom headers based on the CSV structure we saw */}
+                      <th className="px-4 py-3 font-semibold border-b border-slate-200">STT</th>
+                      <th className="px-4 py-3 font-semibold border-b border-slate-200">TÊN VĂN BẢN</th>
+                      <th className="px-4 py-3 font-semibold border-b border-slate-200">SỐ VB</th>
+                      <th className="px-4 py-3 font-semibold border-b border-slate-200">NGÀY VB</th>
+                      <th className="px-4 py-3 font-semibold border-b border-slate-200">FILE VB</th>
+                      <th className="px-4 py-3 font-semibold border-b border-slate-200">CƠ QUAN BAN HÀNH</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {rows.map((row, rowIndex) => {
+                      // Skip empty rows or rows that are just section headers if they don't fit well
+                      // But we'll try to render them nicely
+                      const isSectionHeader = row[1] && !row[3] && !row[4] && !row[5] && !row[6];
+                      
+                      return (
+                        <tr 
+                          key={rowIndex} 
+                          className={`hover:bg-slate-50 transition-colors ${isSectionHeader ? 'bg-slate-100 font-semibold text-emerald-800' : ''}`}
+                        >
+                          <td className="px-4 py-3 border-r border-slate-100 text-center text-slate-500">{row[0]}</td>
+                          <td className="px-4 py-3 border-r border-slate-100 whitespace-normal min-w-[300px] text-slate-700">{row[1]}</td>
+                          <td className="px-4 py-3 border-r border-slate-100 text-center">{row[3]}</td>
+                          <td className="px-4 py-3 border-r border-slate-100">{row[4]}</td>
+                          <td className="px-4 py-3 border-r border-slate-100">
+                            {row[5] && (row[5].startsWith('http://') || row[5].startsWith('https://')) ? (
+                              <a 
+                                href={row[5]} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded-md transition-all font-medium group"
+                              >
+                                <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                <span>Xem file</span>
+                              </a>
+                            ) : (
+                              <span className={row[5]?.trim().toLowerCase() === 'xem file' ? 'text-slate-400 italic' : ''}>
+                                {row[5]}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 border-r border-slate-100 text-center">{row[6]}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View (Module/Card Layout) */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {rows.map((row, rowIndex) => {
+                  const isSectionHeader = row[1] && !row[3] && !row[4] && !row[5] && !row[6];
+                  
+                  if (isSectionHeader) {
                     return (
-                      <tr 
-                        key={rowIndex} 
-                        className={`hover:bg-slate-50 transition-colors ${isSectionHeader ? 'bg-slate-100 font-semibold text-emerald-800' : ''}`}
-                      >
-                        <td className="px-4 py-3 border-r border-slate-100 text-center text-slate-500">{row[0]}</td>
-                        <td className="px-4 py-3 border-r border-slate-100 whitespace-normal min-w-[300px]">{row[1]}</td>
-                        <td className="px-4 py-3 border-r border-slate-100 text-center">{row[3]}</td>
-                        <td className="px-4 py-3 border-r border-slate-100">{row[4]}</td>
-                        <td className="px-4 py-3 border-r border-slate-100">
+                      <div key={rowIndex} className="bg-slate-50 px-4 py-3 font-bold text-emerald-800 text-xs uppercase tracking-wider">
+                        {row[1]}
+                      </div>
+                    );
+                  }
+
+                  const hasNoInfo = !row[3]?.trim() && !row[4]?.trim() && !(row[5] && (row[5].startsWith('http://') || row[5].startsWith('https://')));
+                  
+                  if (hasNoInfo) {
+                    return (
+                      <div key={rowIndex} className="p-4 bg-white">
+                        <div className="flex items-start gap-3">
+                          <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0 mt-0.5">
+                            {row[0]}
+                          </span>
+                          <div className="flex flex-col gap-1">
+                            <h3 className="text-sm font-medium text-slate-700 leading-snug">
+                              {row[1]}
+                            </h3>
+                            <span className="text-[11px] text-slate-400 italic">Chưa có văn bản</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={rowIndex} className="p-4 bg-white active:bg-slate-50 transition-colors">
+                      <div className="flex items-start gap-3 mb-3">
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0 mt-0.5">
+                          {row[0]}
+                        </span>
+                        <h3 className="text-sm font-medium text-slate-700 leading-snug">
+                          {row[1]}
+                        </h3>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-4 ml-8">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] uppercase text-slate-400 font-bold tracking-widest">Số VB</span>
+                          <span className="text-xs font-semibold text-slate-600">{row[3] || '---'}</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] uppercase text-slate-400 font-bold tracking-widest">Ngày VB</span>
+                          <span className="text-xs font-semibold text-slate-600">{row[4] || '---'}</span>
+                        </div>
+                      </div>
+
+                      <div className="ml-8 flex items-end justify-between pt-3 border-t border-slate-50">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] uppercase text-slate-400 font-bold tracking-widest">Cơ quan ban hành</span>
+                          <span className="text-xs text-slate-500 font-medium">{row[6] || '---'}</span>
+                        </div>
+                        <div>
                           {row[5] && (row[5].startsWith('http://') || row[5].startsWith('https://')) ? (
                             <a 
                               href={row[5]} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-[10px] font-bold shadow-sm active:scale-95 transition-all"
                             >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              Xem file
+                              <Eye className="w-3.5 h-3.5" />
+                              XEM FILE
                             </a>
                           ) : (
-                            <span className={row[5]?.trim().toLowerCase() === 'xem file' ? 'text-slate-400 italic' : ''}>
-                              {row[5]}
+                            <span className="text-[10px] text-slate-400 italic font-medium">
+                              {row[5] || 'Không có file'}
                             </span>
                           )}
-                        </td>
-                        <td className="px-4 py-3 border-r border-slate-100 text-center">{row[6]}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {rows.length === 0 && (
+                  <div className="p-12 text-center text-slate-400 italic">
+                    Không tìm thấy dữ liệu phù hợp
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </main>
