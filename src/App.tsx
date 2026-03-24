@@ -30,6 +30,14 @@ export default function App() {
 
   const clickCountRef = useRef(0);
   const lastClickTimeRef = useRef(0);
+  const projectNameRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (projectNameRef.current) {
+      projectNameRef.current.style.height = 'auto';
+      projectNameRef.current.style.height = `${projectNameRef.current.scrollHeight}px`;
+    }
+  }, [projectInfo["Tên dự án/công trình"]]);
 
   const handleLogoClick = () => {
     const now = Date.now();
@@ -146,7 +154,7 @@ export default function App() {
       // 3. Match found! Now fetch HTML version to extract links
       let htmlText = '';
       try {
-        const htmlUrl = 'https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/htmlview/sheet?headers=true&gid=0';
+        const htmlUrl = 'https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/htmlview/sheet?headers=true&gid=0';
         let htmlResponse;
         try {
           htmlResponse = await fetch(htmlUrl);
@@ -521,7 +529,7 @@ export default function App() {
             <button 
               onClick={async () => {
                 const filename = `Danh mục hồ sơ - ${projectInfo["Mã công trình"] || ""}.xlsx`;
-                const url = "https://docs.google.com/spreadsheets/d/1KgPTbaGUntJXZTjUs3v_iKBmG7yEltxSK7sjxOkaNK8/export?format=xlsx&gid=0";
+                const url = "https://docs.google.com/spreadsheets/d/1B237SBdWeaQvc0GWH7hwcJI9ztiSxdBxXFbN4nBnxzU/export?format=xlsx&gid=0";
                 
                 try {
                   // Try multiple proxies for download
@@ -581,13 +589,23 @@ export default function App() {
               {Object.entries(projectInfo).map(([key, value], idx) => {
                 if (key === 'Tên dự án/công trình') {
                   return (
-                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                      <span className="text-slate-500 font-medium min-w-[160px]">{key}:</span>
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3">
+                      <span className="text-slate-500 font-medium min-w-[160px] pt-1.5">{key}:</span>
                       <div className="relative flex-1 max-w-4xl" ref={dropdownRef}>
-                        <input 
-                          type="text" 
+                        <textarea 
+                          ref={projectNameRef}
                           value={value}
                           onFocus={() => setShowDropdown(true)}
+                          onInput={(e) => {
+                            const target = e.target as HTMLTextAreaElement;
+                            target.style.height = 'auto';
+                            target.style.height = `${target.scrollHeight}px`;
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                            }
+                          }}
                           onChange={(e) => {
                             const selectedName = e.target.value;
                             setProjectInfo(prev => ({...prev, "Tên dự án/công trình": selectedName}));
@@ -607,8 +625,9 @@ export default function App() {
                               }
                             }
                           }}
-                          className="w-full pl-3 pr-10 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-slate-800 font-semibold"
+                          className="w-full pl-3 pr-10 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-slate-800 font-semibold resize-none overflow-hidden"
                           placeholder="Nhập từ khoá để tìm kiếm..."
+                          rows={1}
                         />
                         {value && (
                           <button 
@@ -616,7 +635,7 @@ export default function App() {
                               setProjectInfo(prev => ({...prev, "Tên dự án/công trình": ""}));
                               setShowDropdown(true);
                             }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+                            className="absolute right-3 top-2 p-1 text-slate-400 hover:text-slate-600"
                             title="Xoá"
                           >
                             <X className="w-4 h-4" />
@@ -669,16 +688,27 @@ export default function App() {
 
         {/* Data Table */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="px-6 py-4 border-b border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="font-semibold text-slate-800">DANH MỤC HỒ SƠ</h2>
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <input
-                type="text"
-                placeholder="Tìm kiếm..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none w-full sm:w-64"
-              />
+              <div className="relative w-full sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-3 pr-9 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none w-full"
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                    title="Xoá tìm kiếm"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
               <span className="text-xs font-medium text-slate-500 bg-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap">
                 {rows.length} dòng
               </span>
@@ -699,7 +729,7 @@ export default function App() {
           ) : (
             <div className="overflow-x-auto max-h-[600px]">
               <table className="w-full text-sm text-left whitespace-nowrap">
-                <thead className="text-xs text-slate-600 uppercase bg-slate-100 sticky top-0 z-10 shadow-sm text-center">
+                <thead className="text-xs text-slate-600 uppercase bg-white sticky top-0 z-10 shadow-sm text-center">
                   <tr>
                     {/* Custom headers based on the CSV structure we saw */}
                     <th className="px-4 py-3 font-semibold border-b border-slate-200">STT</th>
